@@ -1,7 +1,7 @@
-from fastapi import FastAPI, Body
-from fastapi.exceptions import WebSocketRequestValidationError
+from fastapi import FastAPI, Body, Depends
 
 from app.model import PostSchema, UserSchema, UserLoginSchema
+from app.auth.auth_bearer import JWTBearer
 from app.auth.auth_handler import signJWT
 
 posts = [
@@ -22,12 +22,12 @@ async def read_root() -> dict:
     return {"message": "Welcome to yout blog"}
 
 
-@app.get("/posts", tags=["posts"])
+@app.get("/posts", dependencies=[Depends(JWTBearer())], tags=["posts"])
 async def get_posts() -> dict:
     return { "data": posts }
 
 
-@app.get("/posts/{id}", tags=["posts"])
+@app.get("/posts/{id}", dependencies=[Depends(JWTBearer())], tags=["posts"])
 async def get_single_post(id: int) -> dict:
     if id > len(posts):
         return {
@@ -41,7 +41,7 @@ async def get_single_post(id: int) -> dict:
             }
 
 
-@app.post("/posts", tags=["posts"])
+@app.post("/posts", dependencies=[Depends(JWTBearer())], tags=["posts"])
 async def add_post(post: PostSchema) -> dict:
     post.id = len(posts) + 1
     posts.append(post.dict())
